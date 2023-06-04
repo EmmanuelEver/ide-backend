@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  email      String   @unique
+  googleId   String?
+  name       String
+  profileUrl String?
+  role       Role     @default(STUDENT)
+  student    Student?
+  teacher    Teacher?
+  admin      Admin?
+}
+
+model Student {
+  id               String            @id @default(uuid())
+  user             User?             @relation(fields: [userId], references: [id])
+  userId           String            @unique
+  sections         Section[]
+  requestSections  Section[]         @relation("PendingStudents")
+  blockedSections  Section[]         @relation("BlockedStudents")
+  activitySessions ActivitySession[]
+  compilations     Compilations[]
+}
+
+model Teacher {
+  id                String     @id @default(uuid())
+  user              User?      @relation(fields: [userId], references: [id])
+  userId            String     @unique
+  createdSections   Section[]
+  createdActivities Activity[]
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  user   User?  @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model Section {
+  id              String     @id @default(uuid())
+  title           String
+  description     String?
+  shortcode       String     @unique
+  createdBy       String
+  teacher         Teacher    @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime   @default(now())
+  lastUpdated     DateTime   @updatedAt()
+  isOnline        Boolean
+  pendingStudents Student[]  @relation("PendingStudents")
+  blockedStudents Student[]  @relation("BlockedStudents")
+  students        Student[]
+  activities      Activity[]
+}
+
+model Activity {
+  id           String            @id @default(uuid())
+  title        String
+  description  String
+  createdAt    DateTime          @default(now())
+  createdBy    String
+  lastUpdated  DateTime          @updatedAt()
+  isOnline     Boolean
+  teacher      Teacher           @relation(fields: [createdBy], references: [id])
+  sectionId    String
+  section      Section           @relation(fields: [sectionId], references: [id])
+  sessions     ActivitySession[]
+  compilations Compilations[]
+}
+
+model ActivitySession {
+  id           String         @id @default(uuid())
+  createdAt    DateTime       @default(now())
+  lastUpdated  DateTime       @updatedAt()
+  activityId   String
+  activity     Activity       @relation(fields: [activityId], references: [id])
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id])
+  answerValue  String
+  compilations Compilations[]
+  isSolved     Boolean
+}
+
+model Compilations {
+  id                String          @id @default(uuid())
+  createdAt         DateTime        @default(now())
+  activityId        String
+  activity          Activity        @relation(fields: [activityId], references: [id])
+  activitySessionId String
+  activitySession   ActivitySession @relation(fields: [activitySessionId], references: [id])
+  studentId         String
+  student           Student         @relation(fields: [studentId], references: [id])
+  codeValue         String?
+  Error             String?
+  LineError         Int?
+  compileResult     String
+  compileTimes      Int
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
