@@ -20,8 +20,9 @@ model User {
   id         String   @id @default(uuid())
   createdAt  DateTime @default(now())
   email      String   @unique
-  googleId   String?
   name       String
+  firstname  String?
+  lastname   String?
   profileUrl String?
   role       Role     @default(STUDENT)
   student    Student?
@@ -64,6 +65,8 @@ model Section {
   createdAt       DateTime   @default(now())
   lastUpdated     DateTime   @updatedAt()
   isOnline        Boolean
+  openDate        DateTime
+  closeDate       DateTime?
   pendingStudents Student[]  @relation("PendingStudents")
   blockedStudents Student[]  @relation("BlockedStudents")
   students        Student[]
@@ -77,6 +80,8 @@ model Activity {
   createdAt    DateTime          @default(now())
   createdBy    String
   lastUpdated  DateTime          @updatedAt()
+  openDate     DateTime
+  closeDate    DateTime?
   isOnline     Boolean
   teacher      Teacher           @relation(fields: [createdBy], references: [id])
   sectionId    String
@@ -116,7 +121,7 @@ model Compilations {
 
 model RefreshToken {
   id        String   @id @default(uuid())
-  token     String
+  token     String   @unique
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())

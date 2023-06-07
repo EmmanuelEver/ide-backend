@@ -1,7 +1,15 @@
+
 export class User {
     id: string;
-    name: string;
+    createdAt: Date;
     email: string;
-    role: string;
-    profileUrl: string
+    googleId: string | null;
+    name: string;
+    profileUrl: string | null;
+    role: Role;
+}
+export enum Role {
+    STUDENT,
+    TEACHER,
+    ADMIN
 }
