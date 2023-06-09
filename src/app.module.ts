@@ -6,9 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { MeModule } from './me/me.module';
 import { SectionModule } from './section/section.module';
+import { ActivitiesModule } from './activities/activities.module';
 
 @Module({
-  imports: [UserModule, AuthModule, ConfigModule.forRoot(), MeModule, SectionModule],
+  imports: [UserModule, AuthModule, ConfigModule.forRoot(), MeModule, SectionModule, ActivitiesModule],
   controllers: [AppController],
   providers: [AppService],
 })

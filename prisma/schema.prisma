@@ -39,6 +39,7 @@ model Student {
   blockedSections  Section[]         @relation("BlockedStudents")
   activitySessions ActivitySession[]
   compilations     Compilations[]
+  activities       Activity[]
 }
 
 model Teacher {
@@ -60,12 +61,13 @@ model Section {
   title           String
   description     String?
   shortcode       String     @unique
+  accessCode      String     @unique
   createdBy       String
   teacher         Teacher    @relation(fields: [createdBy], references: [id])
   createdAt       DateTime   @default(now())
   lastUpdated     DateTime   @updatedAt()
   isOnline        Boolean
-  openDate        DateTime
+  openDate        DateTime   @default(now())
   closeDate       DateTime?
   pendingStudents Student[]  @relation("PendingStudents")
   blockedStudents Student[]  @relation("BlockedStudents")
@@ -74,20 +76,22 @@ model Section {
 }
 
 model Activity {
-  id           String            @id @default(uuid())
-  title        String
-  description  String
-  createdAt    DateTime          @default(now())
-  createdBy    String
-  lastUpdated  DateTime          @updatedAt()
-  openDate     DateTime
-  closeDate    DateTime?
-  isOnline     Boolean
-  teacher      Teacher           @relation(fields: [createdBy], references: [id])
-  sectionId    String
-  section      Section           @relation(fields: [sectionId], references: [id])
-  sessions     ActivitySession[]
-  compilations Compilations[]
+  id                String            @id @default(uuid())
+  title             String
+  shortDescription String
+  description       String
+  createdAt         DateTime          @default(now())
+  createdBy         String
+  lastUpdated       DateTime          @updatedAt()
+  openDate          DateTime
+  closeDate         DateTime?
+  isOnline          Boolean
+  teacher           Teacher           @relation(fields: [createdBy], references: [id])
+  sectionId         String
+  section           Section           @relation(fields: [sectionId], references: [id])
+  sessions          ActivitySession[]
+  compilations      Compilations[]
+  students          Student[]
 }
 
 model ActivitySession {

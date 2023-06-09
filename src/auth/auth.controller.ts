@@ -18,7 +18,7 @@ export class AuthController {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'none',
-                expires: new Date(Date.now() + 1 * 24 * 60 * 1000)
+                expires: new Date(Date.now() + (1 * 24 * 60 * 60 * 1000))
             })
             .send({accessToken})
         } else {
