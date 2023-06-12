@@ -69,7 +69,7 @@ export class SectionService {
     }
 
     async joinSection(userId: string, accessCode: any):Promise<Section | null>  {
-        const student = await this.userService.findByStudentId(userId);
+        const student = await this.userService.findStudentByUserId(userId);
         const updatedSection = await this.prisma.section.update({
             where: {
               accessCode: accessCode

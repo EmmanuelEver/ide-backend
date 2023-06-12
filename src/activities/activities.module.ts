@@ -6,6 +6,7 @@ import { UserService } from 'src/user/user.service';
 
 @Module({
   providers: [ActivitiesService, PrismaService, UserService],
-  controllers: [ActivitiesController]
+  controllers: [ActivitiesController],
+  exports: [ActivitiesService],
 })
 export class ActivitiesModule {}

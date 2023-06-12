@@ -76,35 +76,38 @@ model Section {
 }
 
 model Activity {
-  id                String            @id @default(uuid())
-  title             String
+  id               String            @id @default(uuid())
+  title            String
   shortDescription String
-  description       String
-  createdAt         DateTime          @default(now())
-  createdBy         String
-  lastUpdated       DateTime          @updatedAt()
-  openDate          DateTime
-  closeDate         DateTime?
-  isOnline          Boolean
-  teacher           Teacher           @relation(fields: [createdBy], references: [id])
-  sectionId         String
-  section           Section           @relation(fields: [sectionId], references: [id])
-  sessions          ActivitySession[]
-  compilations      Compilations[]
-  students          Student[]
+  description      String
+  starterCode      String?
+  createdAt        DateTime          @default(now())
+  createdBy        String
+  lastUpdated      DateTime          @updatedAt()
+  openDate         DateTime
+  closeDate        DateTime?
+  isOnline         Boolean
+  teacher          Teacher           @relation(fields: [createdBy], references: [id])
+  sectionId        String
+  section          Section           @relation(fields: [sectionId], references: [id])
+  sessions         ActivitySession[]
+  compilations     Compilations[]
+  students         Student[]
 }
 
 model ActivitySession {
-  id           String         @id @default(uuid())
-  createdAt    DateTime       @default(now())
-  lastUpdated  DateTime       @updatedAt()
-  activityId   String
-  activity     Activity       @relation(fields: [activityId], references: [id])
-  studentId    String
-  student      Student        @relation(fields: [studentId], references: [id])
-  answerValue  String
-  compilations Compilations[]
-  isSolved     Boolean
+  id               String         @id @default(uuid())
+  createdAt        DateTime       @default(now())
+  lastUpdated      DateTime       @updatedAt()
+  activityId       String
+  activity         Activity       @relation(fields: [activityId], references: [id])
+  studentId        String
+  student          Student        @relation(fields: [studentId], references: [id])
+  answerValue      String
+  compilationCount Int            @default(0)
+  compilations     Compilations[]
+  isSolved         Boolean
+  result           String?
 }
 
 model Compilations {
@@ -117,7 +120,7 @@ model Compilations {
   studentId         String
   student           Student         @relation(fields: [studentId], references: [id])
   codeValue         String?
-  Error             String?
+  error             Boolean?
   LineError         Int?
   compileResult     String
   compileTimes      Int

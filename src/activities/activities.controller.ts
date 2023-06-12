@@ -22,7 +22,7 @@ export class ActivitiesController {
     @UseGuards(JwtAuthGuard)
     @Get(":activityId")
     async getActivity(@Req() req, @Param("activityId") activityId: string) {
-        if(req.user.role === "STUDENT") await this.activitiesService.getStudentActivity(req.user.userId, activityId)
+        if(req.user.role === "STUDENT") return await this.activitiesService.getStudentActivity(req.user.userId, activityId)
         const activity = await this.activitiesService.getTeacherActivity(req.user.userId, activityId)
         return activity
     }
@@ -42,5 +42,13 @@ export class ActivitiesController {
         if(!sectionId) throw new HttpException("Section id required", HttpStatus.BAD_REQUEST)
         const createdActivity = this.activitiesService.createTeacherActivity(req.user.userId, createActivityDto, sectionId)
         return createdActivity
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("activity-output")
+    async getStudentOutputs(@Req() req, @Query("activityId") activityId: string, @Query("studentId") studentId: string) {
+        if(req.user.role !== "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
+        if(!activityId) throw new HttpException("Activity ID is required", HttpStatus.BAD_REQUEST)
+        return await this.activitiesService.getActivityOutput(activityId, studentId)
     }
 }

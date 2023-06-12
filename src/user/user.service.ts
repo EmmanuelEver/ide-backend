@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, Role, Student, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 
@@ -26,42 +26,38 @@ export class UserService {
     }
 
     async findByRole(role: Role):Promise<User[]> {
-        const userData = this.prisma.user.findMany({where: {role: role}})
-        if(userData) {
-            return Promise.resolve(userData)
-        }
-        return null
+        const userData = await this.prisma.user.findMany({where: {role: role}})
+        if(!userData) throw new HttpException("User not found", HttpStatus.NOT_FOUND)
+        return userData
     }
 
     async findById(userId: string): Promise<User | null> {
-        const userData = this.prisma.user.findUnique({where: {id: userId}})
-        if(userData) {
-            return Promise.resolve(userData)
-        }
-        return null
+        const userData = await this.prisma.user.findUnique({where: {id: userId}})
+        if(!userData) throw new HttpException("User not found", HttpStatus.NOT_FOUND)
+        return userData
     }
 
-    async findByStudentId(userId: string): Promise<Student | null> {
-      const userData = this.prisma.student.findUnique({where: {userId}, include: {user: true}})
-      if(userData) {
-          return Promise.resolve(userData)
-      }
-      return null
+    async findStudentByUserId(userId: string): Promise<Student | null> {
+      const userData = await this.prisma.student.findUnique({where: {userId}, include: {user: true}})
+      if(!userData) throw new HttpException("User not found", HttpStatus.NOT_FOUND)
+      return userData
+    }
+    
+    async findStudentById(studentId: string): Promise<Student | null> {
+      const userData = await this.prisma.student.findUnique({where: {id: studentId}, include: {user: true}})
+      if(!userData) throw new HttpException("User not found", HttpStatus.NOT_FOUND)
+      return userData
     }
 
     async findByTeacherId(userId: string): Promise<any | null> {
-      const userData = this.prisma.teacher.findUnique({where: {userId}, include: {user: true}})
-      if(userData) {
-          return Promise.resolve(userData)
-      }
-      return null
+      const userData = await this.prisma.teacher.findUnique({where: {userId}, include: {user: true}})
+      if(userData) return userData
+      throw new HttpException("Teacher doesn exist", HttpStatus.NOT_FOUND)
     }
 
     async findByEmail(email: string): Promise<User | null> {
         const userData = this.prisma.user.findUnique({where: {email}})
-        if(userData) {
-            return Promise.resolve(userData)
-        }
+        if(userData) return userData
         return null
     }
 
