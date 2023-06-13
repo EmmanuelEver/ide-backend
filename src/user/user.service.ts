@@ -49,10 +49,15 @@ export class UserService {
       return userData
     }
 
-    async findByTeacherId(userId: string): Promise<any | null> {
+    async findTeacherByUserId(userId: string): Promise<any | null> {
       const userData = await this.prisma.teacher.findUnique({where: {userId}, include: {user: true}})
       if(userData) return userData
       throw new HttpException("Teacher doesn exist", HttpStatus.NOT_FOUND)
+    }
+    async findTeacherById(teacherId: string): Promise<Student | null> {
+      const userData = await this.prisma.teacher.findUnique({where: {id: teacherId}, include: {user: true}})
+      if(!userData) throw new HttpException("Teacher not found", HttpStatus.NOT_FOUND)
+      return userData
     }
 
     async findByEmail(email: string): Promise<User | null> {

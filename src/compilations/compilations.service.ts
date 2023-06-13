@@ -57,7 +57,7 @@ export class CompilationsService {
     }
 
     async getAllCompilationsOfMyStudents(userId: string, activityId?: string):Promise<Compilations []> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         const activity = activityId ?  await this.activityService.getActivity(activityId) : null
         const queryActivity = activity ? {activityId: activity.id} : {}
         try {
@@ -79,7 +79,7 @@ export class CompilationsService {
     }
 
     async getAllCompilationsOfStudent(userId: string, studentId: string, activityId?: string):Promise<Compilations []> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         const student = await this.userService.findStudentById(userId)
         const activity = activityId ?  await this.activityService.getActivity(activityId) : null
         const queryActivity = activity ? {activityId: activity.id} : {}

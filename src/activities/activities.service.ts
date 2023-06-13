@@ -29,7 +29,7 @@ export class ActivitiesService {
 
     async getTeacherActivities(userId: string): Promise<Activity[]> {
         try {
-            const teacher = await this.userService.findByTeacherId(userId)
+            const teacher = await this.userService.findTeacherByUserId(userId)
             if(!teacher) throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
             const activities = await this.prisma.activity.findMany({where: {createdBy: teacher.id}})
             return activities
@@ -88,7 +88,7 @@ export class ActivitiesService {
     }
 
     async getTeacherActivity(userId: string, activityId: string): Promise<Activity | null> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         if(!teacher) throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
         try {
             const activity = await this.prisma.activity.findFirst({
@@ -121,7 +121,7 @@ export class ActivitiesService {
     }
 
     async createTeacherActivity(userId: string, payload: CreateActivityDto, sectionId: string): Promise <Activity | null> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         if(!teacher) throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
         try {
             const createdActivity = await this.prisma.activity.create({
@@ -152,7 +152,7 @@ export class ActivitiesService {
     }
 
     async updateActivity(activityId: string, userId: string, payload: any): Promise<Activity | null> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         if(!teacher) throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
         const isCreatedByTeacher = await this.prisma.activity.findFirst({
             where: {

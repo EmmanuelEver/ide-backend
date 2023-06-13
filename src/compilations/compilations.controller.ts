@@ -35,12 +35,6 @@ export class CompilationsController {
         return await this.compilationsServices.createCompilation(compileDto.activitySessionId, req.user.userId, compileDto )
     }
 
-    @UseGuards(JwtAuthGuard)
-    @Get("activity-output")
-    async getStudentOutputs(@Req() req, @Query("activityId") activityId: string, @Query("studentId") studentId: string) {
-        if(req.user.role !== "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
-        if(!activityId) throw new HttpException("Activity ID is required", HttpStatus.BAD_REQUEST)
-
-    }
+    
 
 }

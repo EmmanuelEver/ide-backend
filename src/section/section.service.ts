@@ -14,12 +14,12 @@ export class SectionService {
     }
 
     async getTeacherSections(userId: string): Promise<Section[]> {
-        const teacher = await this.userService.findByTeacherId(userId)
-        const sections = await this.prisma.section.findMany({ where: { createdBy: teacher.id }, include: { students: { include: { user: true }, take: 6 }, activities: true } })
+        const teacher = await this.userService.findTeacherByUserId(userId)
+        const sections = await this.prisma.section.findMany({ where: { createdBy: teacher.id }, include: { students: { include: { user: true }, take: 6 }, activities: {select: {title: true, id: true, closeDate: true, shortDescription: true, sessions: {select: { student: { select: {user: {select: {name: true}}}}}}}} } })
         return sections
     }
     async getTeacherSection(userId: string, sectionId: string): Promise<Section | null> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         const section = await this.prisma.section.findFirst({ where: { createdBy: teacher.id, id: sectionId }, include: { students: { include: { user: true } }, activities: true, blockedStudents: { include: { user: true } }, pendingStudents: { include: { user: true } } } })
         if (section) return section
         return null
@@ -37,7 +37,7 @@ export class SectionService {
     }
 
     async createSection(userId: string, sectionData: any): Promise<Section> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         if (!teacher) return null
         const createdSection = await this.prisma.section.create({
             data: {
@@ -55,7 +55,7 @@ export class SectionService {
     }
 
     async updateTeacherSection(userId: string, sectionId: string, payload: any): Promise<Section | null> {
-        const teacher = await this.userService.findByTeacherId(userId)
+        const teacher = await this.userService.findTeacherByUserId(userId)
         if (!teacher) return null
         const updatedSection = await this.prisma.section.update({
             where: {
