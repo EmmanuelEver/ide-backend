@@ -62,13 +62,66 @@ export class OutputsService {
                 },
                 select: {
                     title: true,
+                    id: true,
                     activities: {
                         select: {
+                            id: true,
                             title: true,
                             shortDescription: true,
                             compilations: true,
                         }
                     }
+                }
+            })
+            return outputs
+        } catch (error) {
+            console.log(error)
+            throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async getStudentsOutputByActivity(activityId: string) {
+        const activity = await this.activityService.getActivity(activityId)
+        try {
+            const outputs = await this.prisma.activity.findUnique({
+                where: {
+                    id: activity.id
+                },
+                select: {
+                    title: true,
+                    id: true,
+                    shortDescription: true,
+                    sessions: {
+                        select: {
+                            id: true,
+                            compilations: true,
+                            student: {
+                                select: {
+                                    user: {
+                                        select: {
+                                            name: true,
+                                            id: true,
+                                            profileUrl: true,
+                                            email: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // students: {
+                    //     include: {
+                    //         compilations: true,
+                    //         user: {
+                    //             select: {
+                    //                 name: true,
+                    //                 id: true,
+                    //                 profileUrl: true,
+                    //                 email: true
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
             })
             return outputs

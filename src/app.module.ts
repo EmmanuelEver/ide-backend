@@ -10,9 +10,10 @@ import { ActivitiesModule } from './activities/activities.module';
 import { ActivitySessionModule } from './activity-session/activity-session.module';
 import { CompilationsModule } from './compilations/compilations.module';
 import { OutputsModule } from './outputs/outputs.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
-  imports: [UserModule, AuthModule, ConfigModule.forRoot(), MeModule, SectionModule, ActivitiesModule, ActivitySessionModule, CompilationsModule, OutputsModule],
+  imports: [UserModule, AuthModule, ConfigModule.forRoot(), MeModule, SectionModule, ActivitiesModule, ActivitySessionModule, CompilationsModule, OutputsModule, DashboardModule],
   controllers: [AppController],
   providers: [AppService],
 })

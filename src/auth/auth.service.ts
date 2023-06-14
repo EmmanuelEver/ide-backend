@@ -83,7 +83,7 @@ export class AuthService {
         const user = await this.userService.findByEmail(email);
         if (!user) {
             //create user
-            const newUser = await this.userService.createUser({ email, name, profileUrl: picture })
+            const newUser = await this.userService.createUser({ email, name, profileUrl: picture, role: process.env.ADMIN_EMAILS?.split(" ").includes(email) ? "ADMIN" : "STUDENT" })
             return this.newRefreshAndAccessToken(newUser, values)
         }
         return this.newRefreshAndAccessToken(user, values);

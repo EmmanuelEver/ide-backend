@@ -20,6 +20,14 @@ export class OutputsController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get("activities/:activityId")
+    async getStudentsOutputByActivity(@Req() req, @Param("activityId") activityId: string,) {
+        if(req.user.role === "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
+        if(activityId) return await this.outputsService.getStudentsOutputByActivity(activityId)
+        throw new HttpException("Activity ID is required", HttpStatus.BAD_REQUEST)
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Get("students/:studentId")
     async getStudentOutput(@Req() req, @Param("studentId") studentId: string, @Query("sectionId") sectionId: string) {
         if(req.user.role === "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
