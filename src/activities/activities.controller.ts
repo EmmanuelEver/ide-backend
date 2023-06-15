@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ActivitiesService } from './activities.service';
 import { CreateActivityDto } from './dto/createActivity.dto';
@@ -50,5 +50,14 @@ export class ActivitiesController {
         if(req.user.role !== "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
         if(!activityId) throw new HttpException("Activity ID is required", HttpStatus.BAD_REQUEST)
         return await this.activitiesService.getActivityOutput(activityId, studentId)
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(":activityId")
+    async deleteActivity(@Req() req, @Param("activityId") activityId: string) {
+        if(req.user.role === "STUDENT") throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED)
+        const deletedActivity = await this.activitiesService.deleteActivity(req.user.userId, activityId)
+        if(deletedActivity) return {message: "Activity successfuly deleted!"}
+        throw new HttpException("Server error", HttpStatus.BAD_REQUEST)
     }
 }

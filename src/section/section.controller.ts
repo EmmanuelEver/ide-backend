@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateSectionDto, JoinSectionApproveDto, JoinSectionDto } from './dto/section.dto';
 import { SectionService } from './section.service';
@@ -52,7 +52,7 @@ export class SectionController {
     @Post("join")
     async joinSection(@Req() req, @Body() payload: JoinSectionDto) {
         if(req.user.role === "STUDENT") {
-            const joined = this.sectionService.joinSection(req.user.userId, payload.accessCode)
+            const joined = await this.sectionService.joinSection(req.user.userId, payload.accessCode)
             if(joined) return {message: "Request to Join section is submitted!" }
             throw new HttpException("error", HttpStatus.BAD_REQUEST)
         }
@@ -77,7 +77,7 @@ export class SectionController {
         if(req.user.role === "STUDENT") throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED)
         if(req.user.role === "TEACHER") {
             const approved = this.sectionService.blockToSection(payload.studentId, sectionId)
-            if(approved) return {message: "Request to Join section is submitted!" }
+            if(approved) return {message: "Successfuly blocked student!" }
             throw new HttpException("aprrove error", HttpStatus.BAD_REQUEST)
         }
         throw new HttpException("error", HttpStatus.BAD_REQUEST)
@@ -89,7 +89,7 @@ export class SectionController {
         if(req.user.role === "STUDENT") throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED)
         if(req.user.role === "TEACHER") {
             const approved = this.sectionService.unBlockToSection(payload.studentId, sectionId)
-            if(approved) return {message: "Request to Join section is submitted!" }
+            if(approved) return {message: "Successfuly blocked student!" }
             throw new HttpException("aprrove error", HttpStatus.BAD_REQUEST)
         }
         throw new HttpException("error", HttpStatus.BAD_REQUEST)
@@ -103,6 +103,19 @@ export class SectionController {
         else if (role === "TEACHER") {
             const updatedSection = await this.sectionService.updateTeacherSection(req.user.userId, sectionId, payload)
             return updatedSection
+        }
+        return ""
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(":sectionId")
+    async deleteSection(@Req() req, @Param("sectionId") sectionId: string) {
+        const role = req.user.role
+        if(role === "STUDENT") throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED)
+        else if (role === "TEACHER") {
+            const isDeleted = await this.sectionService.deleteSection(req.user.userId, sectionId)
+            if(isDeleted) return {message: "Section successfuly deleted!"}
+            throw new HttpException("Server error", HttpStatus.BAD_REQUEST)
         }
         return ""
     }

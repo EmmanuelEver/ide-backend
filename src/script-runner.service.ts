@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -7,6 +7,9 @@ import { randomBytes } from 'crypto';
 @Injectable()
 export class ScriptService {
   runCScript(script: string): Promise<{ result?: string | null; error?: boolean, message: string, lineNumber?: number | undefined }> {
+    if (script.includes('scanf') || script.includes('gets') || script.includes('getch')) {
+      throw new HttpException('Input invocations are not allowed in the script.', HttpStatus.BAD_REQUEST);
+    }
     return new Promise((resolve) => {
       // Save the script to a temporary file inside the src folder
       const fileName = randomBytes(6).toString("hex")

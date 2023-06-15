@@ -10,6 +10,11 @@ async function bootstrap() {
     origin: 'http://localhost:4000',
     credentials: true,
   });
+  app.enableCors({
+    allowedHeaders: ['content-type', 'Authorization'],
+    origin: 'https://edlabs.netlify.app',
+    credentials: true,
+  });
   app.use(cookieParser());
   await app.listen(4500);
 }

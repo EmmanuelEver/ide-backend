@@ -20,7 +20,7 @@ export class ActivitiesService {
 
     async getAllActivities(): Promise<Activity[]> {
         try {
-            const activities = await this.prisma.activity.findMany()
+            const activities = await this.prisma.activity.findMany({orderBy: {title: "asc"}})
             return activities
         } catch (error) {
             throw new HttpException("Server Error", HttpStatus.INTERNAL_SERVER_ERROR)
@@ -31,7 +31,7 @@ export class ActivitiesService {
         try {
             const teacher = await this.userService.findTeacherByUserId(userId)
             if(!teacher) throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
-            const activities = await this.prisma.activity.findMany({where: {createdBy: teacher.id}})
+            const activities = await this.prisma.activity.findMany({where: {createdBy: teacher.id}, orderBy: {createdAt: "desc"}})
             return activities
         } catch (error) {
             throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
@@ -49,7 +49,11 @@ export class ActivitiesService {
                     },
                   },
                   include: {
-                    activities: true,
+                    activities: {
+                        where: {
+                            isOnline: true
+                        }
+                    }
                 },
             })
             return studentActivity
@@ -198,5 +202,24 @@ export class ActivitiesService {
             console.log(error)
             throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
         }
+    }
+
+    async deleteActivity(userId: string, activityId: string) {
+        const teacher = await this.userService.findTeacherByUserId(userId);
+        const activity = await this.prisma.activity.findUnique({
+            where: {
+                id:activityId
+            }
+        })
+
+        if(activity && activity.createdBy === teacher.id) {
+            await this.prisma.activity.delete({
+                where: {
+                    id: activity.id
+                }
+            })
+            return true
+        }
+        throw new HttpException("You are unathorized to delete this section", HttpStatus.UNAUTHORIZED)
     }
 }

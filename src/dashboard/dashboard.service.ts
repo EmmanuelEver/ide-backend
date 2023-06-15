@@ -16,6 +16,7 @@ export class DashboardService {
                     id: student.id,
                   },
                 },
+                isOnline: true,
               },
               include: {
                 activities: {
