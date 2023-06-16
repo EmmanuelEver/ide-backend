@@ -19,6 +19,7 @@ export class ScriptService {
       // Write the script to the temporary file
       fs.writeFile(scriptPath, script, (err) => {
         if (err) {
+          console.error(err)
           resolve({ message: 'Error saving script file.', error: true,  result: null});
         } else {
           // Compile the script using the `gcc` command (assuming GCC is installed)
@@ -52,6 +53,7 @@ export class ScriptService {
                 });
 
                 if (execError) {
+                  console.error(execError)
                   resolve({ message: `Error executing script: ${execError.message}`, error: true});
                 } else {
                   // Resolve with the stdout output
