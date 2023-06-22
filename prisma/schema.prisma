@@ -112,6 +112,7 @@ model ActivitySession {
   compilations     Compilations[]
   isSolved         Boolean
   result           String?
+  eqScore          Float?
 }
 
 model Compilations {
@@ -128,6 +129,7 @@ model Compilations {
   LineError         Int?
   compileResult     String
   compileTimes      Int
+  lineChanges       String?
 }
 
 model RefreshToken {

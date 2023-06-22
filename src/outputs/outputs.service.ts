@@ -29,6 +29,7 @@ export class OutputsService {
                                     studentId: student.id
                                 },
                                 select: {
+                                    eqScore: true,
                                     compilationCount: true,
                                     compilations: true,
                                     isSolved: true,
@@ -94,6 +95,7 @@ export class OutputsService {
                     sessions: {
                         select: {
                             id: true,
+                            eqScore: true,
                             compilations: true,
                             student: {
                                 select: {
@@ -162,6 +164,7 @@ export class OutputsService {
                         },
                         activitySessions : {
                             select: {
+                                eqScore: true,
                                 activity: {
                                     select: {
                                         title: true

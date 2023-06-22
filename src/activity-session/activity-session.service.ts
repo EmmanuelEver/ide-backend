@@ -115,6 +115,7 @@ export class ActivitySessionService {
     }
     
     async updateActivitySession(activitySessionId, payload: any):Promise<ActivitySession> {
+        console.log(payload)
         try {
             const updatedActivitySession = await this.prisma.activitySession.update({
                 where: {

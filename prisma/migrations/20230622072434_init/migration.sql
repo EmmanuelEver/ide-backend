@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ActivitySession" ALTER COLUMN "eqScore" SET DATA TYPE DOUBLE PRECISION;

@@ -10,6 +10,45 @@ import { UserService } from 'src/user/user.service';
 export class CompilationsService {
     constructor(private prisma: PrismaService, private userService: UserService, private activitySessionService: ActivitySessionService, private scriptService: ScriptService, private activityService: ActivitiesService){}
 
+    private getCodeCompilationLineChanges(prevValue: string, currentValue: string) {
+        const prevValueArray = prevValue.split(/\r?\n/)
+            const currentValueArray = currentValue.split(/\r?\n/)
+    
+            const maxLength = Math.max(prevValueArray.length, currentValueArray.length);
+            const unequalIndices = [];
+    
+            for (let i = 0; i < maxLength; i++) {
+                if (prevValueArray[i] !== currentValueArray[i]) {
+                    unequalIndices.push(i + 1);
+                }
+            }
+            return unequalIndices
+    }
+
+    private calculateEqScore(compilationPairs: [c1:Compilations, c2:Compilations][]) {
+        return compilationPairs.map(([c1, c2]) => {
+            let score = 0;
+            // check if both events end in error
+            if(c1.error && c2.error) {
+                score += 2;
+                // check if same error
+                if(c1.compileResult === c2.compileResult) {
+                    score += 2
+                }
+                //check if same line error
+                if(c1.LineError === c2.LineError) {
+                    score += 3
+                }
+                //check if same edit location
+                if(this.getCodeCompilationLineChanges(c1.codeValue, c2.codeValue).includes(c1.LineError)) {
+                    score += 2
+                }
+                return score / 9
+            }
+            return score / 9
+        })
+    }
+
     async getAllCompilations():Promise<Compilations[] | null> {
         try {
             const compilations = await this.prisma.compilations.findMany()
@@ -135,6 +174,21 @@ export class CompilationsService {
                 }
             })
             if(compilation) {
+                const compilations = await this.prisma.compilations.findMany({where: {
+                    activitySessionId: activitySession.id
+                }})
+                if(compilations.length >= 2) {
+                    const compilationPairs = []
+                    compilations.forEach((compilation, idx) => {
+                        if(idx + 1 !== compilations.length) {
+                            compilationPairs.push([compilation, compilations[idx + 1]])
+                        }
+                    })
+                    const compilationPairScores = this.calculateEqScore(compilationPairs)
+                    const averageCompilationPairScore = compilationPairScores.reduce((a, b) => (a+=b), 0) / compilationPairScores.length
+                    await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result, eqScore: averageCompilationPairScore})
+                    return {result, error, message}
+                }
                 await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result})
                 return {result, error, message}
             }
