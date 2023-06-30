@@ -17,4 +17,7 @@ export class CreateActivityDto {
 
     isOnline: boolean;
 
+    @IsNotEmpty()
+    lang: "c" | "python"
+
 }

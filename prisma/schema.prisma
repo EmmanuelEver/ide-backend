@@ -16,6 +16,18 @@ enum Role {
   ADMIN
 }
 
+enum ErrorType {
+  CompilationError
+  FileSystemError
+  ExecutionError
+  OtherError
+}
+
+enum ProgLanguage {
+  c
+  python
+}
+
 model User {
   id          String    @id @default(uuid())
   createdAt   DateTime  @default(now())
@@ -97,6 +109,7 @@ model Activity {
   sessions         ActivitySession[]
   compilations     Compilations[]
   students         Student[]
+  lang             ProgLanguage?
 }
 
 model ActivitySession {
@@ -130,6 +143,7 @@ model Compilations {
   compileResult     String
   compileTimes      Int
   lineChanges       String?
+  errorType         ErrorType?
 }
 
 model RefreshToken {

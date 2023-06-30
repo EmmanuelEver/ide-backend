@@ -147,8 +147,8 @@ export class CompilationsService {
         const student = await this.userService.findStudentByUserId(userId)
         if(!student) throw new HttpException("Student is not existing", HttpStatus.BAD_REQUEST)
         const activitySession = await this.activitySessionService.getActivitySession(activitySessionId)
-        const {result, error, message, lineNumber} = await this.scriptService.runCScript(payload.codeValue)
         try {
+            const {result, error, message, lineNumber} = activitySession?.activity?.lang === "python" ? await this.scriptService.runPythonScript(payload.codeValue) :  activitySession?.activity?.lang === "c" ? await this.scriptService.runCScript(payload.codeValue) : await this.scriptService.runCScript(payload.codeValue)
             const compilation = await this.prisma.compilations.create({
                 data: {
                     error: error,

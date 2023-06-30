@@ -24,6 +24,7 @@ export class OutputsService {
                             id: true,
                             title: true,
                             shortDescription: true,
+                            lang: true,
                             sessions: {
                                 where: {
                                     studentId: student.id
@@ -70,6 +71,7 @@ export class OutputsService {
                             title: true,
                             shortDescription: true,
                             compilations: true,
+                            lang: true
                         }
                     }
                 }
@@ -92,6 +94,7 @@ export class OutputsService {
                     title: true,
                     id: true,
                     shortDescription: true,
+                    lang: true,
                     sessions: {
                         select: {
                             id: true,
@@ -147,7 +150,8 @@ export class OutputsService {
                 activities: {
                     select: {
                         title: true,
-                        id: true
+                        id: true,
+                        lang: true
                     }
                 },
                 students: {
