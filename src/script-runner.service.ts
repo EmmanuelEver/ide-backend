@@ -85,7 +85,7 @@ export class ScriptService {
           resolve({ message: 'Error saving script file.', error: true,  result: null, lineNumber: -1, errorType: "FileSystemError"});
         } else {
           // Execute the script using the `python` command (assuming Python is installed)
-          exec(`python3 ${scriptPath}`, (execError, execStdout, execStderr) => {
+          exec(`python ${scriptPath}`, (execError, execStdout, execStderr) => {
             // Remove the temporary script file
             fs.unlink(scriptPath, (unlinkErr) => {
               if (unlinkErr) {
