@@ -85,7 +85,7 @@ export class ScriptService {
           resolve({ message: 'Error saving script file.', error: true,  result: null, lineNumber: -1, errorType: "FileSystemError"});
         } else {
           // Execute the script using the `python` command (assuming Python is installed)
-          exec(`python ${scriptPath}`, (execError, execStdout, execStderr) => {
+          exec(`python3 ${scriptPath}`, (execError, execStdout, execStderr) => {
             // Remove the temporary script file
             fs.unlink(scriptPath, (unlinkErr) => {
               if (unlinkErr) {
@@ -98,9 +98,12 @@ export class ScriptService {
               const matches = errorMessage.match(/line (\d+)/);
               if (matches && matches.length > 1) {
                 const lineNumber = matches[1];
-                const error = this.getPythonReadableError(script, lineNumber)
-                const formattedError = `Error executing script at line ${lineNumber}: ${error.trim()}`;
-                resolve({ error: true, result: formattedError, message: `Error executing script: ${execError.message}`, lineNumber: parseInt(lineNumber), errorType: "ExecutionError"});
+                try {
+                  const readableError = this.getPythonReadableError(execStderr);
+                  resolve({ error: true, result: readableError, message: `Error executing script: ${readableError}`, lineNumber: parseInt(lineNumber), errorType: "ExecutionError"});
+                } catch (error) {
+                  resolve({ error: true, result: errorMessage, message: `Error executing script: ${errorMessage}`, lineNumber: parseInt(lineNumber), errorType: "ExecutionError"});
+                }
               } else {
                 resolve({ error: true, result: execError.message, message: `Error executing script: ${execError.message}`, lineNumber: -1, errorType: "ExecutionError"});
               }
@@ -114,11 +117,11 @@ export class ScriptService {
     });
   }
 
-  private getPythonReadableError(code: string, lineNumber: string): string {
-    const pythonError = `Traceback (most recent call last):\nline ${lineNumber},`;
-    const codeLines = code.split('\n');
-    const errorLineIndex = parseInt(lineNumber, 10) - 1;
-    const errorLine = codeLines[errorLineIndex];
-    return `${pythonError}\n    ${errorLine}`;
+  private getPythonReadableError(stderr: string): string {
+    const filePath = stderr?.match(/File "(.*?)",/);
+    const filePathRegex = new RegExp(filePath[0], 'g');
+    const cleanedErrorLine = stderr.replace(filePathRegex, '');
+
+    return cleanedErrorLine.trim();
   }
 }
