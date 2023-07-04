@@ -3,11 +3,12 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { randomBytes } from 'crypto';
+import { ErrorType } from '@prisma/client';
 
 @Injectable()
 export class ScriptService {
 
-  runCScript(script: string): Promise<{ result?: string | null; error?: boolean, errorType?: string, message: string, lineNumber?: number | undefined }> {
+  runCScript(script: string): Promise<{ result?: string | null; error?: boolean, errorType?: ErrorType, message: string, lineNumber?: number | undefined }> {
     if (script.includes('scanf') || script.includes('gets') || script.includes('getch')) {
       throw new HttpException('Input invocations are not allowed in the script.', HttpStatus.BAD_REQUEST);
     }
@@ -58,7 +59,7 @@ export class ScriptService {
                   resolve({ message: `Error executing script: ${execError.message}`, error: true, lineNumber: -1, errorType: "ExecutionError"});
                 } else {
                   // Resolve with the stdout output
-                  resolve({ result: execStdout, error: false, message: "success running script", errorType: "" });
+                  resolve({ result: execStdout, error: false, message: "success running script" });
                 }
               });
             }
@@ -68,7 +69,7 @@ export class ScriptService {
     });
   }
 
-  runPythonScript(script: string): Promise<{ result?: string | null; error?: boolean, errorType?: string, message: string, lineNumber?: number | undefined }> {
+  runPythonScript(script: string): Promise<{ result?: string | null; error?: boolean, errorType?: ErrorType, message: string, lineNumber?: number | undefined }> {
     if (script.includes('input') || script.includes('exec')) {
       throw new HttpException('Input invocations are not allowed in the script.', HttpStatus.BAD_REQUEST);
     }
