@@ -29,8 +29,9 @@ export class OutputsController {
 
     @UseGuards(JwtAuthGuard)
     @Get("students/:studentId")
-    async getStudentOutput(@Req() req, @Param("studentId") studentId: string, @Query("sectionId") sectionId: string) {
+    async getStudentOutput(@Req() req, @Param("studentId") studentId: string, @Query("activityId") activityId: string, @Query("sectionId") sectionId: string) {
         if(req.user.role === "STUDENT") throw new HttpException("Unauthorized to access this resource", HttpStatus.UNAUTHORIZED)
+        if(activityId) return await this.outputsService.getStudentOutputByActivity(studentId, activityId)
         if(!sectionId) return await this.outputsService.getStudentOutputs(req.user.userId, studentId)
         if(sectionId) return await this.outputsService.getStudentOutputBySection(studentId, sectionId)
     }

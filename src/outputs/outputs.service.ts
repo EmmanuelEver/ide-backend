@@ -49,6 +49,38 @@ export class OutputsService {
         }
     }
 
+    async getStudentOutputByActivity(studentId: string, activityId: string) {
+        const student = await this.userService.findStudentByUserId(studentId)
+        try {
+            const activity = await this.prisma.activity.findUnique({
+                where: {
+                    id: activityId
+                },
+                select: {
+                    sessions: {
+                        where: {
+                            studentId: student.id
+                        },
+                        include: {
+                            compilations: true
+                        }
+                    },
+                    id: true,
+                    sectionId: true,
+                    title: true,
+                    description: true,
+                    shortDescription: true,
+                    lang: true
+                },
+            })
+            return activity
+        } catch (error) {
+            console.log(error)
+            throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+    }
+
     async getStudentOutputs(userId: string, studentId: string) {
         const teacher = await this.userService.findTeacherByUserId(userId)
         const student = await this.userService.findStudentByUserId(studentId)
@@ -99,9 +131,16 @@ export class OutputsService {
                         select: {
                             id: true,
                             eqScore: true,
+                            lastUpdated: true,
                             compilations: true,
                             student: {
                                 select: {
+                                    id: true,
+                                    activitySessions: {
+                                        select: {
+                                            eqScore: true
+                                        }
+                                    },
                                     user: {
                                         select: {
                                             name: true,
@@ -171,10 +210,11 @@ export class OutputsService {
                                 eqScore: true,
                                 activity: {
                                     select: {
-                                        title: true
+                                        title: true,
+                                        sectionId: true
                                     }
                                 },
-                                compilations: true
+                                compilationCount: true
                             }
                         }
                     }
