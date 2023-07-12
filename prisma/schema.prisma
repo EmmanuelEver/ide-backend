@@ -26,6 +26,7 @@ enum ErrorType {
 enum ProgLanguage {
   c
   python
+  java
 }
 
 model User {
