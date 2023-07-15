@@ -32,12 +32,23 @@ export class ScriptService {
               const errorLines = compileStderr.split('\n');
               const regex = /^(.+?):(\d+):(\d+:)?\s+error:(.+)/;
               const match = errorLines[0].match(regex);
+              const errorType = this.getCompilationErrorType(errorLines[0]);
               if (match) {
                 const [, , lineNumber, , error] = match;
                 const formattedError = `Error compiling script at line ${lineNumber}: ${error.trim()}`;
-                resolve({ error: true, result: formattedError, message: `Error compiling script: ${compileError.message}`, lineNumber: parseInt(lineNumber), errorType: "CompilationError" });
+                fs.unlink(scriptPath, (unlinkErr) => {
+                  if (unlinkErr) {
+                    console.error('Error while deleting temporary script file:', unlinkErr);
+                  }
+                });
+                resolve({ error: true, result: formattedError, message: `Error compiling script: ${compileError.message}`, lineNumber: parseInt(lineNumber), errorType: errorType });
               } else {
-                resolve({ error: true, result: compileError.message, message: `Error compiling script: ${compileError.message}`, errorType: "CompilationError" });
+                fs.unlink(scriptPath, (unlinkErr) => {
+                  if (unlinkErr) {
+                    console.error('Error while deleting temporary script file:', unlinkErr);
+                  }
+                });
+                resolve({ error: true, result: compileError.message, message: `Error compiling script: ${compileError.message}`, errorType: errorType });
               }
 
             } else {
@@ -56,8 +67,10 @@ export class ScriptService {
                 });
 
                 if (execError) {
-                  console.error(execError)
-                  resolve({ message: `Error executing script: ${execError.message}`, error: true, lineNumber: -1, errorType: "ExecutionError" });
+                  const lineNumber = this.getExecutionErrorLine(execStderr);
+                  const errorType = this.getExecutionErrorType(execError.message);
+                  const formattedError = `Error executing script: ${execError.message}`;
+                  resolve({result: formattedError, message: `Error executing script: ${execError.message}`, error: true, lineNumber: lineNumber, errorType: errorType });
                 } else {
                   // Resolve with the stdout output
                   resolve({ result: execStdout, error: false, message: "success running script" });
@@ -222,6 +235,46 @@ export class ScriptService {
     });
   }
 
+  private getCompilationErrorType(errorLine: string): ErrorType {
+    console.log(errorLine)
+    if (errorLine.includes('error: expected') && errorLine.includes(';')) {
+      return 'MissingSemicolonError';
+    }
+    else if (errorLine.includes('error: undeclared') || errorLine.includes('error: implicit declaration') || errorLine.includes('undeclared identifier')) {
+      return 'UndeclaredVariableError';
+    } else if (errorLine.includes('incompatible')) {
+      return 'IncompatibleTypeError';
+    }
+    else if (errorLine.includes('error: expected') || errorLine.includes('error: syntax')) {
+      return 'SyntaxError';
+    }
+    else {
+      return 'CompilationError';
+    }
+  }
+  
+  private getExecutionErrorType(errorMessage: string): ErrorType {
+    if (errorMessage.includes('Segmentation fault')) {
+      return 'SegmentationFaultError';
+    } else if (errorMessage.includes('Floating point exception')) {
+      return 'FloatingPointError';
+    } else if (errorMessage.includes('Assertion failed')) {
+      return 'AssertionError';
+    } else if (errorMessage.includes('Infinite loop') || errorMessage.includes('maxBuffer length exceeded')) {
+      return 'InfiniteLoopError';
+    } else if (errorMessage.includes('System call error')) {
+      return 'SystemCallError';
+    } else {
+      return 'ExecutionError';
+    }
+  }
+
+  private getExecutionErrorLine(execStderr: string): number {
+    const regex = /at line (\d+)/;
+    const match = execStderr.match(regex);
+    return match ? parseInt(match[1], 10) : -1;
+  }
+
   private getPythonReadableError(stderr: string): string {
     const filePath = stderr?.match(/File "(.*?)",/);
     const filePathRegex = new RegExp(filePath[0], 'g');
@@ -230,13 +283,13 @@ export class ScriptService {
   }
 
   private removeDirAndItems(dir) {
-    if(fs.existsSync(dir)) {
+    if (fs.existsSync(dir)) {
       fs.readdir(dir, (err, files) => {
         if (err) throw err;
         for (const file of files) {
           fs.unlinkSync(path.join(dir, file));
         }
-    fs.rmdirSync(dir)
+        fs.rmdirSync(dir)
 
       });
 

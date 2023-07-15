@@ -17,6 +17,7 @@ export class OutputsService {
                     id: sectionId
                 },
                 select: {
+                    id: true,
                     title: true,
                     shortcode: true,
                     activities: {
@@ -30,18 +31,51 @@ export class OutputsService {
                                     studentId: student.id
                                 },
                                 select: {
-                                    eqScore: true,
-                                    compilationCount: true,
                                     compilations: true,
-                                    isSolved: true,
-                                    answerValue: true,
-                                    lastUpdated: true
+                                    eqScore: true,
+                                    lastUpdated: true,
+                                    compilationCount: true
                                 }
                             }
                         }
                     }
                 }
             })
+                .then((section) => {
+                    if (!section) {
+                        throw new Error(`Student with ID ${studentId} not found.`);
+                    }
+
+
+                    const top3ErrorTypesForStudentInSection = {
+                        ...section,
+                        studentId: student.id,
+                        sectionId: section.id,
+                        errorTypes: [],
+                    };
+
+                    const errorTypes = section.activities.flatMap((activity) => activity.sessions.flatMap((session) =>
+                        session.compilations.map((compilation) => compilation.errorType)
+                    ))
+
+                    const errorTypeCounts = errorTypes.reduce((counts, errorType) => {
+                        counts[errorType] = (counts[errorType] || 0) + 1;
+                        return counts;
+                    }, {});
+
+                    const sortedErrorTypes = Object.entries(errorTypeCounts).sort(
+                        (a: any, b: any) => b[1] - a[1]
+                    );
+
+                    const top3 = sortedErrorTypes.slice(0, 3).map((entry) => entry[0]);
+                    top3ErrorTypesForStudentInSection.errorTypes = top3;
+
+                    return top3ErrorTypesForStudentInSection;
+                })
+                .catch((error) => {
+                    console.error('Error retrieving top 3 error types for student in section:', error);
+                    return outputs;
+                });
             return outputs
         } catch (error) {
             console.log(error)
@@ -52,28 +86,61 @@ export class OutputsService {
     async getStudentOutputByActivity(studentId: string, activityId: string) {
         const student = await this.userService.findStudentByUserId(studentId)
         try {
-            const activity = await this.prisma.activity.findUnique({
+            const activityWithTop3ErrorTypes = await this.prisma.activity.findUnique({
                 where: {
-                    id: activityId
+                    id: activityId,
                 },
-                select: {
+                include: {
                     sessions: {
-                        where: {
-                            studentId: student.id
-                        },
                         include: {
                             compilations: true
-                        }
+                        },
                     },
-                    id: true,
-                    sectionId: true,
-                    title: true,
-                    description: true,
-                    shortDescription: true,
-                    lang: true
                 },
             })
-            return activity
+                .then((activity) => {
+                    if (!activity) {
+                        throw new Error(`Activity with ID ${activityId} not found.`);
+                    }
+
+                    const activityWithTop3ErrorTypes = {
+                        ...activity,
+                        id: activity.id,
+                        title: activity.title,
+                        sessions: activity.sessions.map((session) => {
+                            // Flatten the compilations and error types into a single array
+                            const errorTypes = session.compilations.map(
+                                (compilation) => compilation.errorType
+                            );
+
+                            // Count the occurrences of each error type
+                            const errorTypeCounts = errorTypes.reduce((counts, errorType) => {
+                                counts[errorType] = (counts[errorType] || 0) + 1;
+                                return counts;
+                            }, {});
+
+                            // Sort the error types by count in descending order
+                            const sortedErrorTypes = Object.entries(errorTypeCounts).sort(
+                                (a: any, b: any) => b[1] - a[1]
+                            );
+
+                            // Select the top 3 error types
+                            const top3 = sortedErrorTypes.slice(0, 3).map((entry) => entry[0]);
+
+                            return {
+                                ...session,
+                                id: session.id,
+                                errorTypes: top3,
+                            };
+                        }),
+                    };
+
+                    return activityWithTop3ErrorTypes;
+                })
+                .catch((error) => {
+                    return activityWithTop3ErrorTypes;
+                });
+            return activityWithTop3ErrorTypes
         } catch (error) {
             console.log(error)
             throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
@@ -190,7 +257,16 @@ export class OutputsService {
                     select: {
                         title: true,
                         id: true,
-                        lang: true
+                        lang: true,
+                        sessions: {
+                            select: {
+                                compilations: {
+                                    select: {
+                                        errorType: true
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 students: {
@@ -205,7 +281,7 @@ export class OutputsService {
                                 email: true,
                             }
                         },
-                        activitySessions : {
+                        activitySessions: {
                             select: {
                                 eqScore: true,
                                 activity: {
@@ -221,6 +297,34 @@ export class OutputsService {
                 }
             }
         })
+            .then((sections) => {
+                const sectionsWithErrorTypes = sections.map((section) => {
+                    const top3ErrorTypesForSection = {
+                        ...section,
+                        errorTypes: [],
+                    };
+
+                    const errorTypes = section.activities.flatMap((activity) =>
+                        activity.sessions.flatMap((session) =>
+                            session.compilations.map((compilation) => compilation.errorType)
+                        )
+                    );
+
+                    const errorTypeCounts = errorTypes.reduce((counts, errorType) => {
+                        counts[errorType] = (counts[errorType] || 0) + 1;
+                        return counts;
+                    }, {});
+                    const sortedErrorTypes = Object.entries(errorTypeCounts).sort(
+                        (a:any, b:any) => b[1] - a[1]
+                      );
+                  
+                      const top3 = sortedErrorTypes.slice(0, 3).map((entry) => entry[0]);
+                      top3ErrorTypesForSection.errorTypes = top3;
+                  
+                      return top3ErrorTypesForSection;
+                })
+                return sectionsWithErrorTypes
+            })
         return sections
     }
 }

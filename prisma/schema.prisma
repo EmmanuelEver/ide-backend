@@ -21,6 +21,17 @@ enum ErrorType {
   FileSystemError
   ExecutionError
   OtherError
+  IndentionError
+  SyntaxError
+  UndeclaredVariableError
+  MissingSemicolonError
+  LogicError
+  SegmentationFaultError
+  FloatingPointError
+  AssertionError
+  InfiniteLoopError
+  SystemCallError
+  IncompatibleTypeError
 }
 
 enum ProgLanguage {
@@ -145,6 +156,7 @@ model Compilations {
   compileTimes      Int
   lineChanges       String?
   errorType         ErrorType?
+  eqScore           Float?          
 }
 
 model RefreshToken {

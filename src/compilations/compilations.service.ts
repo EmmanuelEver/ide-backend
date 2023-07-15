@@ -188,6 +188,14 @@ export class CompilationsService {
                     const compilationPairScores = this.calculateEqScore(compilationPairs)
                     const averageCompilationPairScore = compilationPairScores.reduce((a, b) => (a+=b), 0) / compilationPairScores.length
                     await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result, eqScore: averageCompilationPairScore})
+                    await this.prisma.compilations.update({
+                        where: {
+                            id: compilation.id
+                        },
+                        data: {
+                            eqScore: averageCompilationPairScore
+                        }
+                    })
                     return {result, error, message}
                 }
                 await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result})
