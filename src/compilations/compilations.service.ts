@@ -32,7 +32,7 @@ export class CompilationsService {
             if(c1.error && c2.error) {
                 score += 2;
                 // check if same error
-                if(c1.compileResult === c2.compileResult) {
+                if(c1.compileResult === c2.compileResult || c1.errorType === c2.errorType) {
                     score += 2
                 }
                 //check if same line error
