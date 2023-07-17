@@ -92,9 +92,14 @@ export class OutputsService {
                 },
                 include: {
                     sessions: {
+                        where: {
+                            student: {
+                                id: student.id,
+                            },
+                        },
                         include: {
                             compilations: true
-                        },
+                        }
                     },
                 },
             })
