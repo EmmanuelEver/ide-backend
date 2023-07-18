@@ -98,7 +98,11 @@ export class OutputsService {
                             },
                         },
                         include: {
-                            compilations: true
+                            compilations: {
+                                orderBy: {
+                                    compileTimes: "desc"
+                                }
+                            }
                         }
                     },
                 },
@@ -107,7 +111,6 @@ export class OutputsService {
                     if (!activity) {
                         throw new Error(`Activity with ID ${activityId} not found.`);
                     }
-
                     const activityWithTop3ErrorTypes = {
                         ...activity,
                         id: activity.id,
@@ -117,18 +120,15 @@ export class OutputsService {
                             const errorTypes = session.compilations.map(
                                 (compilation) => compilation.errorType
                             );
-
                             // Count the occurrences of each error type
                             const errorTypeCounts = errorTypes.reduce((counts, errorType) => {
                                 counts[errorType] = (counts[errorType] || 0) + 1;
                                 return counts;
                             }, {});
-
                             // Sort the error types by count in descending order
                             const sortedErrorTypes = Object.entries(errorTypeCounts).sort(
                                 (a: any, b: any) => b[1] - a[1]
                             );
-
                             // Select the top 3 error types
                             const top3 = sortedErrorTypes.slice(0, 3).map((entry) => entry[0]);
 
