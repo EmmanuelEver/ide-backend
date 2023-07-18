@@ -100,7 +100,7 @@ export class OutputsService {
                         include: {
                             compilations: {
                                 orderBy: {
-                                    compileTimes: "desc"
+                                    compileTimes: "asc"
                                 }
                             }
                         }
