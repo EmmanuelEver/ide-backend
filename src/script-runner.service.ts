@@ -30,27 +30,28 @@ export class ScriptService {
           exec(`gcc ${scriptPath} -o ${compiledScriptPath}`, (compileError, compileStdout, compileStderr) => {
             if (compileError) {
               const errorLines = compileStderr.split('\n');
-              const regex = /^(.+?):(\d+):(\d+:)?\s+error:(.+)/;
-              const match = errorLines[0].match(regex);
-              const errorType = this.getCompilationErrorType(errorLines[0]);
-              if (match) {
-                const [, , lineNumber, , error] = match;
-                const formattedError = `Error compiling script at line ${lineNumber}: ${error.trim()}`;
-                fs.unlink(scriptPath, (unlinkErr) => {
-                  if (unlinkErr) {
-                    console.error('Error while deleting temporary script file:', unlinkErr);
-                  }
-                });
-                resolve({ error: true, result: formattedError, message: `Error compiling script: ${compileError.message}`, lineNumber: parseInt(lineNumber), errorType: errorType });
-              } else {
-                fs.unlink(scriptPath, (unlinkErr) => {
-                  if (unlinkErr) {
-                    console.error('Error while deleting temporary script file:', unlinkErr);
-                  }
-                });
-                resolve({ error: true, result: compileError.message, message: `Error compiling script: ${compileError.message}`, errorType: errorType });
+              const regex = /^(.+?):(\d+):(\d+:)? (error|warning): (.+)/;
+              const compileErrors = errorLines.map((errorLine) => {
+                const match = errorLine.match(regex);
+                if (match) {
+                  const [, filePath, lineNumber, , errorType, errorMessage] = match;
+                  return { filePath, lineNumber: parseInt(lineNumber), errorType, errorMessage };
+                }
+                return null;
+              }).filter(Boolean);
+              const compileError1 = compileErrors[0]
+              fs.unlink(scriptPath, (unlinkErr) => {
+                if (unlinkErr) {
+                  console.error('Error while deleting temporary script file:', unlinkErr);
+                }
+              });
+              if (compileError1) {
+                const errorType = this.getCompilationErrorType(compileError1?.errorMessage);
+                console.log({ error: true, result: compileStderr, message: `Error compiling script ${compileError1?.lineNumber > 0 ? `at line number ${compileError1?.lineNumber}` : ""}: ${compileError1?.errorMessage}`, lineNumber: compileError1?.lineNumber, errorType: errorType });
+                resolve({ error: true, result: compileStderr, message: `Error compiling script ${compileError1?.lineNumber > 0 ? `at line number ${compileError1?.lineNumber}` : ""}: ${compileError1?.errorMessage}`, lineNumber: compileError1?.lineNumber, errorType: errorType });
               }
-
+              const errorType = this.getCompilationErrorType(compileStderr);
+              resolve({ error: true, result: compileStderr, message: compileStderr, lineNumber: -1, errorType: errorType });
             } else {
               // Execute the compiled script
               exec(compiledScriptPath, (execError, execStdout, execStderr) => {
@@ -67,10 +68,12 @@ export class ScriptService {
                 });
 
                 if (execError) {
+                  console.log(execError.signal)
                   const lineNumber = this.getExecutionErrorLine(execStderr);
                   const errorType = this.getExecutionErrorType(execError.message);
                   const formattedError = `Error executing script: ${execError.message}`;
-                  resolve({result: formattedError, message: `Error executing script: ${execError.message}`, error: true, lineNumber: lineNumber, errorType: errorType });
+                  console.log({ result: formattedError, message: `Error executing script: ${execError.message}`, error: true, lineNumber: execError.signal === "SIGSEGV" ? -1 : lineNumber, errorType: execError.signal === "SIGSEGV" ? ErrorType.SegmentationFaultError : errorType });
+                  resolve({ result: formattedError, message: `Error executing script: ${execError.message}`, error: true, lineNumber: execError.signal === "SIGSEGV" ? -1 : lineNumber, errorType: execError.signal === "SIGSEGV" ? ErrorType.SegmentationFaultError : errorType });
                 } else {
                   // Resolve with the stdout output
                   resolve({ result: execStdout, error: false, message: "success running script" });
@@ -236,23 +239,56 @@ export class ScriptService {
   }
 
   private getCompilationErrorType(errorLine: string): ErrorType {
-    console.log(errorLine)
-    if (errorLine.includes('error: expected') && errorLine.includes(';')) {
+    if (errorLine.includes('expected') && errorLine.includes(';')) {
       return 'MissingSemicolonError';
     }
-    else if (errorLine.includes('error: undeclared') || errorLine.includes('error: implicit declaration') || errorLine.includes('undeclared identifier')) {
+    else if (errorLine.includes('undeclared') || errorLine.includes('error: implicit declaration') || errorLine.includes('undeclared identifier')) {
       return 'UndeclaredVariableError';
-    } else if (errorLine.includes('incompatible')) {
+    } 
+    else if (errorLine.includes('incompatible')) {
       return 'IncompatibleTypeError';
     }
-    else if (errorLine.includes('error: expected') || errorLine.includes('error: syntax')) {
+    else if (errorLine.includes('declaration specifier') || errorLine.includes('two or more data types in declaration specifiers') || errorLine?.includes('definition of variable')) {
+      return 'VariableDeclerationError';
+    }
+    else if (errorLine.includes('type specifier')) {
+      return 'TypeSpecifierError';
+    }
+    else if (errorLine.includes('function definition')) {
+      return 'FunctionDefinitionError';
+    }
+    else if (errorLine.includes('not assignable') || errorLine.includes('error: assignment')) {
+      return 'AssignmentError';
+    } 
+    else if (errorLine?.includes('implicitly declaring') || errorLine?.includes('implicit declaration')) {
+      return "ImplicitFunctionDeclerationError"
+    }
+    else if (errorLine.includes('requires pointer operand')) {
+      return "NonPointerDeferenceError"
+    }
+    else if (errorLine.includes('file not found')) {
+      return "FileNotFoundError"
+    }
+    else if (errorLine.includes('subscripted value is not')) {
+      return "SubscriptUsageError"
+    }
+    else if (errorLine.includes('"FILENAME" or <FILENAME>')) {
+      return "ImportError"
+    }
+    else if (errorLine.includes('format specifies')) {
+      return "FormatSpecifierError"
+    }
+    else if (errorLine.includes('Segmentation fault')) {
+      return 'SegmentationFaultError';
+    }
+    else if (errorLine.includes('error: expected') || errorLine.includes('error: syntax') || errorLine.includes('expected') || errorLine.includes('missing terminating')) {
       return 'SyntaxError';
     }
     else {
       return 'CompilationError';
     }
   }
-  
+
   private getExecutionErrorType(errorMessage: string): ErrorType {
     if (errorMessage.includes('Segmentation fault')) {
       return 'SegmentationFaultError';

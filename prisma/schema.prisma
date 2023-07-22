@@ -32,6 +32,16 @@ enum ErrorType {
   InfiniteLoopError
   SystemCallError
   IncompatibleTypeError
+  AssignmentError
+  ImplicitFunctionDeclerationError
+  NonPointerDeferenceError //"Non-pointer Dereference Error"
+  FileNotFoundError
+  ImportError
+  SubscriptUsageError // "Invalid Subscript Operator Usage"
+  FormatSpecifierError // "Format Specifier - Argument Type Mismatch"
+  VariableDeclerationError // "declaration specifier"
+  TypeSpecifierError
+  FunctionDefinitionError
 }
 
 enum ProgLanguage {
@@ -122,6 +132,7 @@ model Activity {
   compilations     Compilations[]
   students         Student[]
   lang             ProgLanguage?
+  correctAnswer    String?
 }
 
 model ActivitySession {

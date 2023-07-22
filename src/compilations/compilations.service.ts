@@ -146,6 +146,19 @@ export class CompilationsService {
     async createCompilation(activitySessionId: string, userId: string, payload: any): Promise< {result: string, error: boolean, message: string} | null> {
         const student = await this.userService.findStudentByUserId(userId)
         if(!student) throw new HttpException("Student is not existing", HttpStatus.BAD_REQUEST)
+        const activity = await this.prisma.activity.findMany({
+            where: {
+                sessions: {
+                    some: {
+                        id: activitySessionId
+                    }
+                }
+            },
+            select: {
+                correctAnswer: true
+            }
+        })
+
         const activitySession = await this.activitySessionService.getActivitySession(activitySessionId)
         try {
             const {result, error, message, lineNumber, errorType} = activitySession?.activity?.lang === "python" ? await this.scriptService.runPythonScript(payload.codeValue) : activitySession?.activity?.lang === "java" ? await this.scriptService.runJavaCode(payload.codeValue) : activitySession?.activity?.lang === "c" ? await this.scriptService.runCScript(payload.codeValue) : await this.scriptService.runCScript(payload.codeValue)
@@ -187,7 +200,7 @@ export class CompilationsService {
                     })
                     const compilationPairScores = this.calculateEqScore(compilationPairs)
                     const averageCompilationPairScore = compilationPairScores.reduce((a, b) => (a+=b), 0) / compilationPairScores.length
-                    await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result, eqScore: averageCompilationPairScore})
+                    await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result, isSolved: !!activity[0].correctAnswer ? (activity[0].correctAnswer === result) : false, eqScore: averageCompilationPairScore})
                     await this.prisma.compilations.update({
                         where: {
                             id: compilation.id
@@ -196,10 +209,10 @@ export class CompilationsService {
                             eqScore: averageCompilationPairScore
                         }
                     })
-                    return {result, error, message}
+                    return {result: lineNumber > 0 ? message: result, error, message}
                 }
-                await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, result})
-                return {result, error, message}
+                 await this.activitySessionService.updateActivitySession(activitySession.id, {compilationCount: {increment: 1}, answerValue: compilation.codeValue, isSolved: !!activity[0].correctAnswer ? (activity[0].correctAnswer === result) : false ,result})
+                return {result: lineNumber > 0 ? message: result, error, message}
             }
             throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (error) {
