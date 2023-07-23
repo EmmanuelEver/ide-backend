@@ -225,19 +225,6 @@ export class OutputsService {
                             }
                         }
                     }
-                    // students: {
-                    //     include: {
-                    //         compilations: true,
-                    //         user: {
-                    //             select: {
-                    //                 name: true,
-                    //                 id: true,
-                    //                 profileUrl: true,
-                    //                 email: true
-                    //             }
-                    //         }
-                    //     }
-                    // }
                 }
             })
             return outputs

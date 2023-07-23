@@ -22,7 +22,11 @@ export class ActivitiesController {
     @UseGuards(JwtAuthGuard)
     @Get(":activityId")
     async getActivity(@Req() req, @Param("activityId") activityId: string) {
-        if(req.user.role === "STUDENT") return await this.activitiesService.getStudentActivity(req.user.userId, activityId)
+        if(req.user.role === "STUDENT")  {
+            const activity = await this.activitiesService.getStudentActivity(req.user.userId, activityId)
+            delete activity.correctAnswer
+            return activity
+        }
         const activity = await this.activitiesService.getTeacherActivity(req.user.userId, activityId)
         return activity
     }
@@ -30,6 +34,7 @@ export class ActivitiesController {
     @UseGuards(JwtAuthGuard)
     @Put(":activityId")
     async updateActivity(@Req() req, @Param("activityId") activityId: string, @Body() payload: any) {
+        console.log(payload)
         if(req.user.role === "STUDENT") throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED)
         const updatedActivity = await this.activitiesService.updateActivity(activityId, req.user.userId,payload)
         return updatedActivity

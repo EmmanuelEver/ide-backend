@@ -52,6 +52,15 @@ export class ActivitiesService {
                     activities: {
                         where: {
                             isOnline: true
+                        },
+                        select: {
+                            title: true,
+                            shortDescription: true,
+                            closeDate: true,
+                            lang: true,
+                            id: true,
+                            description: true,
+                            starterCode: true
                         }
                     }
                 },
@@ -81,8 +90,8 @@ export class ActivitiesService {
                             title: true,
                             shortcode: true
                         }
-                    }
-                  }
+                    },
+                }
             })
     
             return studentActivity

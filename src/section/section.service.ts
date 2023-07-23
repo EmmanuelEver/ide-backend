@@ -26,7 +26,7 @@ export class SectionService {
   }
 
   async getStudentSections(userId: string): Promise<Section[]> {
-    const user = await this.prisma.student.findUnique({ where: { userId: userId }, include: { sections: { where: {isOnline: true}, include: { activities: { where: { isOnline: true } }, teacher: { select: { user: { select: { name: true, profileUrl: true } } } } } } } })
+    const user = await this.prisma.student.findUnique({ where: { userId: userId }, include: { sections: { where: {isOnline: true}, include: { activities: { where: { isOnline: true }, select: {title: true, id: true, shortDescription: true, lang: true, closeDate: true, starterCode: true} }, teacher: { select: { user: { select: { name: true, profileUrl: true } } } } } } } })
     return user.sections
   }
 
