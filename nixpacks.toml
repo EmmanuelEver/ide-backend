@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["...", "gcc", "python", "jdk"]
+nixPkgs = ["...", "gcc", "python"]
