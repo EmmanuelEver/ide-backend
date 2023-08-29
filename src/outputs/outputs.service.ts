@@ -256,7 +256,8 @@ export class OutputsService {
                                     select: {
                                         errorType: true
                                     }
-                                }
+                                },
+                                eqScore: true
                             }
                         }
                     }
