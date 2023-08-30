@@ -174,7 +174,11 @@ export class OutputsService {
                             id: true,
                             title: true,
                             shortDescription: true,
-                            compilations: true,
+                            compilations: {
+                                where: {
+                                    studentId: student?.id
+                                }
+                            },
                             lang: true
                         }
                     }
