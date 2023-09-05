@@ -12,4 +12,10 @@ export class DashboardController {
         if(req.user.role === "STUDENT") return await this.dashboardService.getStudentDashboardData(req.user.userId)
         if(req.user.role === "TEACHER") return await this.dashboardService.getTeacherDashboardData(req.user.userId)
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("/recent-activities")
+    async getRecentActivities(@Req() req:any) {
+        if(req.user.role === "STUDENT") return await this.dashboardService.getStudentRecentActivities(req.user.userId)
+    }
 }

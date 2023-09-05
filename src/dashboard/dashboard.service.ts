@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
 
@@ -40,6 +40,52 @@ export class DashboardService {
         })
 
         return {sections: dashboardData.sections, teachers: dashboardData.teachers.length, activities: dashboardData.activities}
+    }
+
+    async getStudentRecentActivities(userId: string) {
+        const student =  await this.userService.findStudentByUserId(userId)
+        const recentActivitiesForStudent = await this.prisma.student.findUnique({
+            where: {
+              id: student?.id,
+            },
+            include: {
+              activitySessions: {
+                include: {
+                  activity: {
+                    include: {
+                        section: true
+                    }
+                  },
+                },
+                orderBy: {
+                  createdAt: 'desc',
+                },
+                take: 3
+              },
+            },
+          }
+          )
+            .then((student) => {
+              if (!student) {
+                throw new Error(`Student with ID ${student.id} not found.`);
+              }
+              const recentActivities = student.activitySessions.map((session) => ({
+                activityId: session.activity.id,
+                title: session.activity.title,
+                createdAt: session.createdAt,
+                section: {
+                    sectionId: session.activity.sectionId,
+                    sectionTitle: session.activity.section.title,
+                    shortcode: session.activity.section.shortcode,
+                  },
+              }));
+              return recentActivities;
+            })
+            .catch((error) => {
+              console.error('Error retrieving recent activities for student:', error);
+              throw new HttpException("Server error", HttpStatus.INTERNAL_SERVER_ERROR)
+            });
+        return recentActivitiesForStudent
     }
 
     async getTeacherDashboardData(userId: string) {
